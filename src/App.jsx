@@ -12,72 +12,54 @@ function App() {
   let minutes = Math.floor(secondsRemaining / 60);
   let seconds = secondsRemaining % 60;
 
-  function playPause() {
-    timerState === "play" ? setTimerState("pause") : setTimerState("play");
-  }
 
-  function modifyBreakTime(value) {
-    if (timerState === "play") return;
-    if (!((breakTime === 1 && value < 0) || (breakTime === 60 && value > 0))) {
-      setBreakTime((prev) => {
-        const newBreakTime = prev + value;
-        setSecondsRemaining(sessionTime * 60);
-        return newBreakTime;
-      });
+  const modifyBreakTime = (amount) => {
+    if (breakTime + amount > 0 && breakTime + amount <= 60) {
+      setBreakTime(breakTime + amount);
     }
-  }
+  };
 
-  function modifySessionTime(value) {
-    if (timerState === "play") return;
-    if (
-      !((sessionTime === 1 && value < 0) || (sessionTime === 60 && value > 0))
-    ) {
-      setSessionTime((prev) => {
-        const newSessionTime = prev + value;
-        setSecondsRemaining(newSessionTime * 60);
-        return newSessionTime;
-      });
+  const modifySessionTime = (amount) => {
+    if (sessionTime + amount > 0 && sessionTime + amount <= 60) {
+      setSessionTime(sessionTime + amount);
+      setSecondsRemaining((sessionTime + amount) * 60);
     }
-  }
+  };
+
+  const reset = () => {
+    setTimerType(() => {
+      setTimerState("pause");
+      setBreakTime(5);
+      setSessionTime(25);
+      setSecondsRemaining(25 * 60);
+      document.getElementById('beep').pause();
+      document.getElementById('beep').load();
+      return "Session";
+    })
+    
+  };
+
+  const playPause = () => {
+    setTimerState((prevState) => (prevState === "pause" ? "play" : "pause"));
+  };
 
   useEffect(() => {
     let intervalId;
-  
-    if (timerState === "play" && secondsRemaining >= 0) {
+    if (timerState === "play" && secondsRemaining > -1) {
       intervalId = setInterval(() => {
-        setSecondsRemaining((prevCount) => {
-          if (prevCount === 0) {
-            document.getElementById("beep").play();
-            if (timerType === "Session") {
-              setTimerType("Break");
-              return breakSeconds;
-            } else {
-              setTimerType("Session");
-              return sessionSeconds;
-            }
-          } else {
-            return prevCount - 1;
-          }
-        });
+        setSecondsRemaining(secondsRemaining - 1);
       }, 1000);
+    } else if (secondsRemaining === -1) {
+      setTimerType((prevType) =>
+        prevType === "Session" ? "Break" : "Session"
+      );
+      setSecondsRemaining(
+        timerType === "Session" ? breakSeconds : sessionSeconds
+      );
+      document.getElementById('beep').play();
     }
-  
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [timerState, secondsRemaining, timerType, sessionSeconds, breakSeconds]);
-  
-  function reset() {
-    setTimerState("pause");
-    setSessionTime(() => {
-      setSecondsRemaining(25 * 60)
-      return 25
-    });
-    setBreakTime(5);
-    setTimerType("Session")
-    document.getElementById("beep").pause();
-    document.getElementById("beep").currentTime = 0;
-  }
+    return () => clearInterval(intervalId);
+  }, [timerState, secondsRemaining, timerType, breakSeconds, sessionSeconds]);
 
   return (
     <>
