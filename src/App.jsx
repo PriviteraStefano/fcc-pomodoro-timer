@@ -67,11 +67,6 @@ function App() {
     };
   }, [timerState, secondsRemaining, timerType, sessionSeconds, breakSeconds]);
   
-  
-  
-  
-  
-
   function reset() {
     setTimerState("pause");
     setSessionTime(() => {
